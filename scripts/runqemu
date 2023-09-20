@@ -36,7 +36,7 @@ runqemu, i.e. `runqemu /path/to/my-image-name.qemuboot.conf`\n\n %s" % message)
 
 def create_logger():
     logger = logging.getLogger('runqemu')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     # create console handler and set level to debug
     ch = logging.StreamHandler()
@@ -1480,14 +1480,6 @@ to your build configuration.
 
     def find_qemu(self):
         qemu_bin = os.path.join(self.bindir_native, self.qemu_system)
-        #export qemu_bin_avery = /home/marek/Downloads/aqcxl_sim-2023_0301/aqemu/tools/build_x86/x86_64-softmmu/qemu-system-x86_64
-        qemu_bin_avery =  self.get('qemu_bin_avery')
-
-        if qemu_bin_avery:
-            logger.info("mb: overriing qemu_bin %s with %s" % (qemu_bin, qemu_bin_avery))
-            qemu_bin = qemu_bin_avery
-
-        logger.info("mb: qemu_bin %s" % qemu_bin)
 
         # It is possible to have qemu-native in ASSUME_PROVIDED, and it won't
         # find QEMU in sysroot, it needs to use host's qemu.
@@ -1560,8 +1552,6 @@ to your build configuration.
 
         cmd = "%s %s" % (self.qemu_opt, kernel_opts)
         cmds = shlex.split(cmd)
-        #print(f'mb: cmds: {cmds}')
-        #logger.info("mb: cmds: %s" % cmds)
         logger.info('Running %s\n' % cmd)
         with open('/proc/uptime', 'r') as f:
             uptime_seconds = f.readline().split()[0]

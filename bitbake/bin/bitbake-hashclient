@@ -56,25 +56,24 @@ def main():
             nonlocal missed_hashes
             nonlocal max_time
 
-            client = hashserv.create_client(args.address)
+            with hashserv.create_client(args.address) as client:
+                for i in range(args.requests):
+                    taskhash = hashlib.sha256()
+                    taskhash.update(args.taskhash_seed.encode('utf-8'))
+                    taskhash.update(str(i).encode('utf-8'))
 
-            for i in range(args.requests):
-                taskhash = hashlib.sha256()
-                taskhash.update(args.taskhash_seed.encode('utf-8'))
-                taskhash.update(str(i).encode('utf-8'))
+                    start_time = time.perf_counter()
+                    l = client.get_unihash(METHOD, taskhash.hexdigest())
+                    elapsed = time.perf_counter() - start_time
 
-                start_time = time.perf_counter()
-                l = client.get_unihash(METHOD, taskhash.hexdigest())
-                elapsed = time.perf_counter() - start_time
+                    with lock:
+                        if l:
+                            found_hashes += 1
+                        else:
+                            missed_hashes += 1
 
-                with lock:
-                    if l:
-                        found_hashes += 1
-                    else:
-                        missed_hashes += 1
-
-                    max_time = max(elapsed, max_time)
-                    pbar.update()
+                        max_time = max(elapsed, max_time)
+                        pbar.update()
 
         max_time = 0
         found_hashes = 0
@@ -113,6 +112,19 @@ def main():
                     with lock:
                         pbar.update()
 
+    def handle_remove(args, client):
+        where = {k: v for k, v in args.where}
+        if where:
+            result = client.remove(where)
+            print("Removed %d row(s)" % (result["count"]))
+        else:
+            print("No query specified")
+
+    def handle_clean_unused(args, client):
+        result = client.clean_unused(args.max_age)
+        print("Removed %d rows" % (result["count"]))
+        return 0
+
     parser = argparse.ArgumentParser(description='Hash Equivalence Client')
     parser.add_argument('--address', default=DEFAULT_ADDRESS, help='Server address (default "%(default)s")')
     parser.add_argument('--log', default='WARNING', help='Set logging level')
@@ -137,6 +149,15 @@ def main():
                                help='Include string in outhash')
     stress_parser.set_defaults(func=handle_stress)
 
+    remove_parser = subparsers.add_parser('remove', help="Remove hash entries")
+    remove_parser.add_argument("--where", "-w", metavar="KEY VALUE", nargs=2, action="append", default=[],
+                               help="Remove entries from table where KEY == VALUE")
+    remove_parser.set_defaults(func=handle_remove)
+
+    clean_unused_parser = subparsers.add_parser('clean-unused', help="Remove unused database entries")
+    clean_unused_parser.add_argument("max_age", metavar="SECONDS", type=int, help="Remove unused entries older than SECONDS old")
+    clean_unused_parser.set_defaults(func=handle_clean_unused)
+
     args = parser.parse_args()
 
     logger = logging.getLogger('hashserv')
@@ -152,9 +173,8 @@ def main():
 
     func = getattr(args, 'func', None)
     if func:
-        client = hashserv.create_client(args.address)
-
-        return func(args, client)
+        with hashserv.create_client(args.address) as client:
+            return func(args, client)
 
     return 0
 

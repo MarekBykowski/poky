@@ -97,6 +97,7 @@ class QemuRunner:
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.setblocking(0)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             sock.bind(("127.0.0.1",0))
             sock.listen(2)
             port = sock.getsockname()[1]
@@ -109,16 +110,15 @@ class QemuRunner:
 
     def decode_qemulog(self, todecode):
         # Sanitize the data received from qemu as it may contain control characters
-        msg = todecode.decode("utf-8", errors='ignore')
+        msg = todecode.decode("utf-8", errors='backslashreplace')
         msg = re_control_char.sub('', msg)
         return msg
 
-    def log(self, msg):
+    def log(self, msg, extension=""):
         if self.logfile:
-            msg = self.decode_qemulog(msg)
-            self.msg += msg
-            with codecs.open(self.logfile, "a", encoding="utf-8") as f:
-                f.write("%s" % msg)
+            with codecs.open(self.logfile + extension, "ab") as f:
+                f.write(msg)
+        self.msg += self.decode_qemulog(msg)
 
     def getOutput(self, o):
         import fcntl
@@ -474,18 +474,14 @@ class QemuRunner:
                         self.logger.error('Invalid file type: %s\n%s' % (file))
                         read = b''
 
-                    self.logger.debug2('Partial boot log:\n%s' % (read.decode('utf-8', errors='ignore')))
+                    self.logger.debug2('Partial boot log:\n%s' % (read.decode('utf-8', errors='backslashreplace')))
                     data = data + read
                     if data:
                         bootlog += data
-                        if self.serial_ports < 2:
-                            # this file has mixed console/kernel data, log it to logfile
-                            self.log(data)
-
+                        self.log(data, extension = ".2")
                         data = b''
 
-                        decodedlog = self.decode_qemulog(bootlog)
-                        if self.boot_patterns['search_reached_prompt'] in decodedlog:
+                        if bytes(self.boot_patterns['search_reached_prompt'], 'utf-8') in bootlog:
                             self.server_socket.close()
                             self.server_socket = qemusock
                             stopread = True
@@ -507,11 +503,20 @@ class QemuRunner:
                                   (self.boottime, time.strftime("%D %H:%M:%S")))
             tail = lambda l: "\n".join(l.splitlines()[-25:])
             bootlog = self.decode_qemulog(bootlog)
-            # in case bootlog is empty, use tail qemu log store at self.msg
-            lines = tail(bootlog if bootlog else self.msg)
-            self.logger.warning("Last 25 lines of text (%d):\n%s" % (len(bootlog), lines))
+            self.logger.warning("Last 25 lines of login console (%d):\n%s" % (len(bootlog), tail(bootlog)))
+            self.logger.warning("Last 25 lines of all logging (%d):\n%s" % (len(self.msg), tail(self.msg)))
             self.logger.warning("Check full boot log: %s" % self.logfile)
             self.stop()
+            data = True
+            while data:
+                try:
+                    time.sleep(1)
+                    data = qemusock.recv(1024)
+                    self.log(data, extension = ".2")
+                    self.logger.warning('Extra log data read: %s\n' % (data.decode('utf-8', errors='backslashreplace')))
+                except Exception as e:
+                    self.logger.warning('Extra log data exception %s' % repr(e))
+                    data = None
             return False
 
         # If we are not able to login the tests can continue

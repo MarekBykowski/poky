@@ -4,7 +4,9 @@
 You can now run 'bitbake <target>'
 
 Common targets are:
-    core-image-cxl-sdk
+    bitbake core-image-cxl-sdk
+    # For testimage and tests in TEST_SUITES run
+    bitbake core-image-cxl-sdk -c testimage
     #core-image-cxl-sdk
 
 You can also run generated qemu images with a command like 'runqemu qemux86-64'.

@@ -27,6 +27,43 @@ class OESSHTarget(OETarget):
             fileHandler.setFormatter(formatter)
             logger.addHandler(fileHandler)
 
+        #for h in logger.handlers:
+        #        bb.warn('mb:     %s' % h)
+
+        for handler in logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                bb.warn('mb: setFromatter for handler %s' % handler)
+                formatter = logging.Formatter(
+                        '%(asctime)s.%(msecs)03d %(levelname)s: %(message)s',
+                        '%H:%M:%S')
+                handler.setFormatter(formatter)
+
+        """
+        mb: if we had name added to the hanlder we could find it out based on the name.
+        Not using, leaving out for future uses.
+        for handler in logger.handlers:
+            if handler.name == "stream_handler":
+                bb.warn('Found stream_handler=%s' % handler)
+                formatter = logging.Formatter(
+                        '%(asctime)s.%(msecs)03d %(levelname)s: %(message)s',
+                        '%H:%M:%S')
+                handler.setFormatter(formatter)
+                if handler == logging.StreamHandler:
+                    bb.warn('handler and logging.StreamHandler are the same')
+        """
+
+        #from logging_tree import printout
+        #printout()
+
+        """
+        mb: a way to print all the loggers and handlers
+        for k,v in  logging.Logger.manager.loggerDict.items():
+            bb.warn('+ [%s] {%s} ' % (str.ljust( k, 20)  , str(v.__class__)[8:-2]) )
+            if not isinstance(v, logging.PlaceHolder):
+                for h in v.handlers:
+                    bb.warn('     +++',str(h.__class__)[8:-2] )
+        """
+
         super(OESSHTarget, self).__init__(logger)
         self.ip = ip
         self.server_ip = server_ip

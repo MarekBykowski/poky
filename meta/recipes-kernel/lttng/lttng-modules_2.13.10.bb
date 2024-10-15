@@ -37,5 +37,6 @@ python do_package:prepend() {
 
 BBCLASSEXTEND = "devupstream:target"
 SRC_URI:class-devupstream = "git://git.lttng.org/lttng-modules;branch=stable-2.13;protocol=https"
-SRCREV:class-devupstream = "7584cfc04914cb0842a986e9808686858b9c8630"
+#SRCREV:class-devupstream = "7584cfc04914cb0842a986e9808686858b9c8630"
+SRCREV:class-devupstream = "305dd985458cad242a6ad489e5a2bc7a624e11e3"
 SRCREV_FORMAT ?= "lttng_git"

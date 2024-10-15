@@ -688,6 +688,11 @@ def _exec_task(fn, task, d, quieterr):
 
     # Ensure Python logging goes to the logfile
     handler = logging.StreamHandler(logfile)
+    # mb: add a streamhandler name.
+    # If we walk through all the loggers and handlers we can find it out
+    # based on its name. I do not need it now as I find it based on the class
+    # but leaving it out for possible future use.
+    #handler.name = "stream_handler"
     handler.setFormatter(logformatter)
     # Always enable full debug output into task logfiles
     handler.setLevel(logging.DEBUG - 2)

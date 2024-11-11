@@ -252,6 +252,7 @@ def SSHCall(command, logger, timeout=None, **opts):
         starttime = time.time()
         process = subprocess.Popen(command, **options)
         has_timeout = False
+        logger.debug('mb: timeout: %s', timeout)
         if timeout:
             endtime = starttime + timeout
             eof = False
@@ -300,14 +301,18 @@ def SSHCall(command, logger, timeout=None, **opts):
                 process.wait()
 
         else:
+            logger.debug('mb: if no timeout, we are here')
             output_raw = process.communicate()[0]
 
         output = output_raw.decode('utf-8', errors='ignore')
         logger.debug('Data from SSH call:\n%s' % output.rstrip())
 
         # timout or not, make sure process exits and is not hanging
+        logger.debug('mb: timout or not, make sure process exits and is not hanging')
+        logger.debug('mb: process.returncode %s' % process.returncode)
         if process.returncode == None:
             try:
+                logger.debug('mb: process.returncode = None, process.wait(timeout=5) & process.kill()')
                 process.wait(timeout=5)
             except TimeoutExpired:
                 try:

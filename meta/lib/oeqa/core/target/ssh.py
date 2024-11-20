@@ -71,8 +71,12 @@ class OESSHTarget(OETarget):
         self.timeout = timeout
         self.user = user
         ssh_options = [
-                '-o', 'ServerAliveCountMax=2',
-                '-o', 'ServerAliveInterval=30',
+                # ServerAliveInterval x ServerAliveInterval = DisconnectTime
+                # If the server becomes unresponsive, ssh will disconnect after DisconnectTime
+                # Setting ServerAliveInterval (or ServerAliveInterval) to 0 will keep the session
+                # alive indefinitely. TODO: Set DisconnectTime after figuring out the timeouts with Cosim.
+                '-o', 'ServerAliveCountMax=0',
+                '-o', 'ServerAliveInterval=0',
                 '-o', 'UserKnownHostsFile=/dev/null',
                 '-o', 'StrictHostKeyChecking=no',
                 '-o', 'LogLevel=ERROR'

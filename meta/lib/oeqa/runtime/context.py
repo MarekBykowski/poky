@@ -41,15 +41,18 @@ class OERuntimeTestContextExecutor(OETestContextExecutor):
     help = 'runtime test component'
     description = 'executes runtime tests over targets'
 
-    default_cases = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-            'cases')
+    default_cases = [os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                          'cases')]
     default_data = None
     default_test_data = 'data/testdata.json'
+    #default_test_data = 'data/testdata.json'
+    default_test_data = os.path.join(default_cases[0], 'testdata.json')
     default_tests = ''
     default_json_result_dir = '%s-results' % name
 
     default_target_type = 'simpleremote'
     default_manifest = 'data/manifest'
+    #default_manifest = '/yocto/yocto/poky/cxl/tmp/deploy/images/cxlx86-64/core-image-cxl-sdk-cxlx86-64.rootfs.manifest'
     default_server_ip = '192.168.7.1'
     default_target_ip = '192.168.7.2'
     default_extract_dir = 'packages/extracted'

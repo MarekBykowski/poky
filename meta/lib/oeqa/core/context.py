@@ -66,6 +66,7 @@ class OETestContext(object):
                 if (cid + '.').startswith(skip + '.'):
                     setattr(tclass, 'setUpHooker', skipfuncgen('Skip by the command line argument "%s"' % skip))
 
+    # mb: loadTests definition is here
     def loadTests(self, module_paths, modules=[], tests=[],
             modules_manifest="", modules_required=[], **kwargs):
         if modules_manifest:
@@ -73,6 +74,7 @@ class OETestContext(object):
 
         self.loader = self.loaderClass(self, module_paths, modules, tests,
                 modules_required, **kwargs)
+        # loadTests calls discover() from lib/oeqa/core/loader.py:class OETestLoader(unittest.TestLoader) 
         self.suites = self.loader.discover()
 
     def prepareSuite(self, suites, processes):

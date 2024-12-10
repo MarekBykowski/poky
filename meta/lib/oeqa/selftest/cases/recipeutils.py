@@ -50,7 +50,7 @@ class RecipeUtilsTests(OESelftestTestCase):
 +SRC_URI[md5sum] = "aaaaaa"
  SRC_URI[sha256sum] = "ac6894d876e45878faae493b0cf61d0e28ec417334448ac0a6ea2229d8343051"
  
- RDEPENDS:${PN} += "${PYTHON_PN}-threading"
+ RDEPENDS:${PN} += "python3-threading"
 """
         patchlines = []
         for f in patches:
@@ -72,7 +72,7 @@ class RecipeUtilsTests(OESelftestTestCase):
         expected_patch = """
 --- a/recipes-test/recipeutils/recipeutils-test_1.2.bb
 +++ b/recipes-test/recipeutils/recipeutils-test_1.2.bb
-@@ -8,6 +8,4 @@
+@@ -11,6 +11,4 @@
  
  BBCLASSEXTEND = "native nativesdk"
  
@@ -97,7 +97,7 @@ class RecipeUtilsTests(OESelftestTestCase):
         expected_patch = """
 --- a/recipes-test/recipeutils/recipeutils-test_1.2.bb
 +++ b/recipes-test/recipeutils/recipeutils-test_1.2.bb
-@@ -8,6 +8,3 @@
+@@ -11,6 +11,3 @@
  
  BBCLASSEXTEND = "native nativesdk"
  

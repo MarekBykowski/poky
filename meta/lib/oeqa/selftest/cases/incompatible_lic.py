@@ -102,6 +102,7 @@ class IncompatibleLicensePerImageTests(OESelftestTestCase):
         return """
 IMAGE_INSTALL:append = " bash"
 INCOMPATIBLE_LICENSE:pn-core-image-minimal = "GPL-3.0* LGPL-3.0*"
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS:remove = "tar"
 """
 
     def test_bash_default(self):
@@ -114,7 +115,7 @@ INCOMPATIBLE_LICENSE:pn-core-image-minimal = "GPL-3.0* LGPL-3.0*"
 
     def test_bash_and_license(self):
         self.disable_class("create-spdx")
-        self.write_config(self.default_config() + '\nLICENSE:append:pn-bash = " & SomeLicense"')
+        self.write_config(self.default_config() + '\nLICENSE:append:pn-bash = " & SomeLicense"\nERROR_QA:remove:pn-bash = "license-exists"')
         error_msg = "ERROR: core-image-minimal-1.0-r0 do_rootfs: Package bash cannot be installed into the image because it has incompatible license(s): GPL-3.0-or-later"
 
         result = bitbake('core-image-minimal', ignore_status=True)
@@ -123,12 +124,12 @@ INCOMPATIBLE_LICENSE:pn-core-image-minimal = "GPL-3.0* LGPL-3.0*"
 
     def test_bash_or_license(self):
         self.disable_class("create-spdx")
-        self.write_config(self.default_config() + '\nLICENSE:append:pn-bash = " | SomeLicense"')
+        self.write_config(self.default_config() + '\nLICENSE:append:pn-bash = " | SomeLicense"\nERROR_QA:remove:pn-bash = "license-exists"\nERROR_QA:remove:pn-core-image-minimal = "license-file-missing"')
 
         bitbake('core-image-minimal')
 
     def test_bash_license_exceptions(self):
-        self.write_config(self.default_config() + '\nINCOMPATIBLE_LICENSE_EXCEPTIONS:pn-core-image-minimal = "bash:GPL-3.0-or-later"')
+        self.write_config(self.default_config() + '\nINCOMPATIBLE_LICENSE_EXCEPTIONS:pn-core-image-minimal = "bash:GPL-3.0-or-later"\nERROR_QA:remove:pn-core-image-minimal = "license-exception"')
 
         bitbake('core-image-minimal')
 
@@ -136,6 +137,8 @@ class NoGPL3InImagesTests(OESelftestTestCase):
     def test_core_image_minimal(self):
         self.write_config("""
 INCOMPATIBLE_LICENSE:pn-core-image-minimal = "GPL-3.0* LGPL-3.0*"
+
+require conf/distro/include/no-gplv3.inc
 """)
         bitbake('core-image-minimal')
 
@@ -144,20 +147,8 @@ INCOMPATIBLE_LICENSE:pn-core-image-minimal = "GPL-3.0* LGPL-3.0*"
 IMAGE_CLASSES += "testimage"
 INCOMPATIBLE_LICENSE:pn-core-image-full-cmdline = "GPL-3.0* LGPL-3.0*"
 INCOMPATIBLE_LICENSE:pn-core-image-weston = "GPL-3.0* LGPL-3.0*"
-# Settings for full-cmdline
-RDEPENDS:packagegroup-core-full-cmdline-utils:remove = "bash bc coreutils cpio ed findutils gawk grep mc mc-fish mc-helpers mc-helpers-perl sed tar time"
-RDEPENDS:packagegroup-core-full-cmdline-dev-utils:remove = "diffutils m4 make patch"
-RDEPENDS:packagegroup-core-full-cmdline-multiuser:remove = "gzip"
-# Settings for weston
-# direct gpl3 dependencies
-RRECOMMENDS:packagegroup-base-vfat:remove = "dosfstools"
-PACKAGECONFIG:remove:pn-bluez5 = "readline"
-# dnf pulls in gpg which is gpl3; it also pulls in python3-rpm which pulls in rpm-build which pulls in bash
-# so install rpm but not dnf
-IMAGE_FEATURES:remove:pn-core-image-weston = "package-management"
-CORE_IMAGE_EXTRA_INSTALL:pn-core-image-weston += "rpm"
-# matchbox-terminal depends on vte, which is gpl3
-CORE_IMAGE_BASE_INSTALL:remove:pn-core-image-weston = "matchbox-terminal"
+
+require conf/distro/include/no-gplv3.inc
 """)
         bitbake('core-image-full-cmdline core-image-weston')
         bitbake('-c testimage core-image-full-cmdline core-image-weston')

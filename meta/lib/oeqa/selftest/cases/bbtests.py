@@ -232,7 +232,9 @@ INHERIT:remove = \"report-error\"
         self.assertLess(errorpos,continuepos, msg = "bitbake didn't pass do_fail_task. bitbake output: %s" % result.output)
 
     def test_non_gplv3(self):
-        self.write_config('INCOMPATIBLE_LICENSE = "GPL-3.0-or-later"')
+        self.write_config('''INCOMPATIBLE_LICENSE = "GPL-3.0-or-later"
+require conf/distro/include/no-gplv3.inc
+''')
         result = bitbake('selftest-ed', ignore_status=True)
         self.assertEqual(result.status, 0, "Bitbake failed, exit code %s, output %s" % (result.status, result.output))
         lic_dir = get_bb_var('LICENSE_DIRECTORY')
@@ -362,3 +364,32 @@ INHERIT:remove = \"report-error\"
 
         result = bitbake('gitunpackoffline-fail -c fetch', ignore_status=True)
         self.assertTrue(re.search("Recipe uses a floating tag/branch .* for repo .* without a fixed SRCREV yet doesn't call bb.fetch2.get_srcrev()", result.output), msg = "Recipe without PV set to SRCPV should have failed: %s" % result.output)
+
+    def test_unexpanded_variable_in_path(self):
+        """
+            Test that bitbake fails if directory contains unexpanded bitbake variable in the name
+        """
+        recipe_name = "gitunpackoffline"
+        self.write_config('PV:pn-gitunpackoffline:append = "+${UNDEFVAL}"')
+        result = bitbake('{}'.format(recipe_name), ignore_status=True)
+        self.assertGreater(result.status, 0, "Build should have failed if ${ is in the path")
+        self.assertTrue(re.search("ERROR: Directory name /.* contains unexpanded bitbake variable. This may cause build failures and WORKDIR polution",
+                                  result.output), msg = "mkdirhier with unexpanded variable should have failed: %s" % result.output)
+
+    def test_bb_env_bb_getvar_equality(self):
+        """ Test if "bitbake -e" output is identical to "bitbake-getvar" output for a variable set from an anonymous function
+        """
+        self.write_config('''INHERIT += "test_anon_func"
+TEST_SET_FROM_ANON_FUNC ?= ""''')
+
+        result_bb_e = runCmd('bitbake -e')
+        bb_e_var_match = re.search('^TEST_SET_FROM_ANON_FUNC="(?P<value>.*)"$', result_bb_e.output, re.MULTILINE)
+        self.assertTrue(bb_e_var_match, msg = "Can't find TEST_SET_FROM_ANON_FUNC value in \"bitbake -e\" output")
+        bb_e_var_value = bb_e_var_match.group("value")
+
+        result_bb_getvar = runCmd('bitbake-getvar TEST_SET_FROM_ANON_FUNC --value')
+        bb_getvar_var_value = result_bb_getvar.output.strip()
+        self.assertEqual(bb_e_var_value, bb_getvar_var_value,
+                         msg='''"bitbake -e" output differs from bitbake-getvar output for TEST_SET_FROM_ANON_FUNC (set from anonymous function)
+bitbake -e: "%s"
+bitbake-getvar: "%s"''' % (bb_e_var_value, bb_getvar_var_value))

@@ -13,14 +13,18 @@ from oeqa.sdk.case import OESDKTestCase
 from oeqa.utils.subprocesstweak import errors_have_output
 errors_have_output()
 
-class EpoxyTest(OESDKTestCase):
+class MesonTest(OESDKTestCase):
     """
     Test that Meson builds correctly.
     """
     def setUp(self):
+        libc = self.td.get("TCLIBC")
+        if libc in [ 'newlib' ]:
+            raise unittest.SkipTest("MesonTest class: SDK doesn't contain a supported C library")
+
         if not (self.tc.hasHostPackage("nativesdk-meson") or
                 self.tc.hasHostPackage("meson-native")):
-            raise unittest.SkipTest("EpoxyTest class: SDK doesn't contain Meson")
+            raise unittest.SkipTest("MesonTest: needs meson")
 
     def test_epoxy(self):
         with tempfile.TemporaryDirectory(prefix="epoxy", dir=self.tc.sdk_dir) as testdir:

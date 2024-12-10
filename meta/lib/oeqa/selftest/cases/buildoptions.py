@@ -14,6 +14,7 @@ from oeqa.selftest.cases.buildhistory import BuildhistoryBase
 from oeqa.core.decorator.data import skipIfMachine
 from oeqa.utils.commands import bitbake, get_bb_var, get_bb_vars
 import oeqa.utils.ftools as ftools
+from oeqa.core.decorator import OETestTag
 
 class ImageOptionsTests(OESelftestTestCase):
 
@@ -83,7 +84,7 @@ class SanityOptionsTest(OESelftestTestCase):
 
         self.write_config("INHERIT:remove = \"report-error\"")
         if "packages-list" not in get_bb_var("ERROR_QA"):
-            self.append_config("ERROR_QA:append = \" packages-list\"")
+            self.append_config("ERROR_QA:append:pn-xcursor-transparent-theme = \" packages-list\"")
 
         self.write_recipeinc('xcursor-transparent-theme', 'PACKAGES += \"${PN}-dbg\"')
         self.add_command_to_tearDown('bitbake -c clean xcursor-transparent-theme')
@@ -93,8 +94,8 @@ class SanityOptionsTest(OESelftestTestCase):
         self.assertTrue(line and line.startswith("ERROR:"), msg=res.output)
         self.assertEqual(res.status, 1, msg = "bitbake reported exit code %s. It should have been 1. Bitbake output: %s" % (str(res.status), res.output))
         self.write_recipeinc('xcursor-transparent-theme', 'PACKAGES += \"${PN}-dbg\"')
-        self.append_config('ERROR_QA:remove = "packages-list"')
-        self.append_config('WARN_QA:append = " packages-list"')
+        self.append_config('ERROR_QA:remove:pn-xcursor-transparent-theme = "packages-list"')
+        self.append_config('WARN_QA:append:pn-xcursor-transparent-theme = " packages-list"')
         res = bitbake("xcursor-transparent-theme -f -c package")
         self.delete_recipeinc('xcursor-transparent-theme')
         line = self.getline(res, "QA Issue: xcursor-transparent-theme-dbg is listed in PACKAGES multiple times, this leads to packaging errors.")
@@ -172,8 +173,8 @@ class BuildhistoryTests(BuildhistoryBase):
 
         data = load_bh(os.path.join(history_dir, 'hicolor-icon-theme-dev', 'latest'))
         if 'FILELIST' in data:
-            self.assertEqual(data['FILELIST'], '')
-        self.assertEqual(int(data['PKGSIZE']), 0)
+            self.assertEqual(data['FILELIST'], '/usr/share/pkgconfig/default-icon-theme.pc')
+        self.assertGreater(int(data['PKGSIZE']), 0)
 
 class ArchiverTest(OESelftestTestCase):
     def test_arch_work_dir_and_export_source(self):
@@ -204,6 +205,7 @@ class ToolchainOptions(OESelftestTestCase):
         self.write_config(features)
         bitbake('fortran-helloworld')
 
+@OETestTag("yocto-mirrors")
 class SourceMirroring(OESelftestTestCase):
     # Can we download everything from the Yocto Sources Mirror over http only
     def test_yocto_source_mirror(self):
@@ -227,7 +229,7 @@ PREMIRRORS = "\\
     https://.*/.*    http://downloads.yoctoproject.org/mirror/sources/ \\n"
 """)
 
-        bitbake("world --runall fetch")
+        bitbake("world --runall fetch --continue")
 
 
 class Poisoning(OESelftestTestCase):

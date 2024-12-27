@@ -372,11 +372,39 @@ def testimage_main(d):
     # test context
     tc = OERuntimeTestContext(td, logger, target, image_packages, extract_dir)
 
+    """
+    # mb:
+    import sys
+    sys.path.append('/yocto/yocto/meta-cxl/lib/oeqa/runtime/cases')
+    import echo
+    for t in echo.tests:
+        test_name = 'test_%s' % t[0]
+        bb.warn('mb: Add test %s' % test_name)
+        test = echo.test_generator(t[1])
+        setattr(echo.ECHOTest, test_name, test)
+    """
+
     # Load tests before starting the target
     test_paths = get_runtime_paths(d)
+    bb.warn('mb: test_paths %s' % test_paths)
     test_modules = d.getVar('TEST_SUITES').split()
     if not test_modules:
         bb.fatal('Empty test suite, please verify TEST_SUITES variable')
+
+    import re
+    import sys
+    path_to_dynamic_test_load = None
+    for layer in d.getVar('BBLAYERS').split():
+        if re.search("meta-cxl", layer):
+            path_to_dynamic_test_load = os.path.join(layer, 'lib/oeqa/runtime')
+            sys.path.append(path_to_dynamic_test_load)
+            bb.warn('mb: sys.path.append(%s)' % path_to_dynamic_test_load)
+
+    if path_to_dynamic_test_load:
+        from dynamic import OEDynamicTestContext
+        dtc = OEDynamicTestContext(logger)
+        dtc.find_modules()
+        dtc.generate_tests_dynamic()
 
     tc.loadTests(test_paths, modules=test_modules)
 
@@ -385,6 +413,10 @@ def testimage_main(d):
         bb.fatal('Empty test suite, please verify TEST_SUITES variable')
     else:
         bb.debug(2, 'test suites:\n\t%s' % '\n\t'.join([str(c) for c in suitecases]))
+
+    bb.warn('mb: test suites:\n\t%s' % '\n\t'.join([str(c) for c in suitecases]))
+    bb.warn('mb: test suites:\n\t%s' % '#'.join([str(c) for c in suitecases]))
+    bb.warn('mb: test suitecases %s' % suitecases)
 
     package_extraction(d, tc.suites)
 
@@ -395,13 +427,16 @@ def testimage_main(d):
         # We need to check if runqemu ends unexpectedly
         # or if the worker send us a SIGTERM
         tc.target.start(params=d.getVar("TEST_QEMUPARAMS"), runqemuparams=d.getVar("TEST_RUNQEMUPARAMS"))
+        bb.warn('mb: past c.target.start()')
         import threading
         try:
             threading.Timer(int(d.getVar("TEST_OVERALL_TIMEOUT")), handle_test_timeout, (int(d.getVar("TEST_OVERALL_TIMEOUT")),)).start()
         except ValueError:
             pass
+        bb.warn('mb: about to start tc.runTests()')
         results = tc.runTests()
         complete = True
+        bb.warn('mb: complete tc.runTests() true')
         if results.hasAnyFailingTest():
             artifacts_list = get_artifacts_list(tc.target, d.getVar("TESTIMAGE_FAILED_QA_ARTIFACTS"))
             if not artifacts_list:

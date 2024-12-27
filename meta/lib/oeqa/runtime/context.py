@@ -41,17 +41,18 @@ class OERuntimeTestContextExecutor(OETestContextExecutor):
     help = 'runtime test component'
     description = 'executes runtime tests over targets'
 
-    default_cases = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-            'cases')
+    default_cases = [os.path.join(os.path.abspath(os.path.dirname(__file__)),
+            'cases')]
+    #default_cases = '/yocto/yocto/meta-cxl/lib/oeqa/runtime/cases'
     default_data = None
     default_test_data = 'data/testdata.json'
     default_tests = ''
-    default_json_result_dir = '%s-results' % name
+    default_json_result_dir = 'data/%s-results' % name
 
     default_target_type = 'simpleremote'
     default_manifest = 'data/manifest'
-    default_server_ip = '192.168.7.1'
-    default_target_ip = '192.168.7.2'
+    default_server_ip = '127.0.0.1:2223'
+    default_target_ip = '127.0.0.1'
     default_extract_dir = 'packages/extracted'
 
     def register_commands(self, logger, subparsers):
@@ -87,7 +88,7 @@ class OERuntimeTestContextExecutor(OETestContextExecutor):
 
         runtime_group.add_argument('--qemu-boot', action='store',
                 help="Qemu boot configuration, only needed when target_type is QEMU.")
-
+    
     @staticmethod
     def getTarget(target_type, logger, target_ip, server_ip, **kwargs):
         target = None

@@ -236,6 +236,7 @@ class OETestLoader(unittest.TestLoader):
         suite = []
         for tcName in testCaseNames:
             case = self._getTestCase(testCaseClass, tcName)
+            bb.warn(f"mb: tcName {tcName} case {case}")
             # Filer by case id
             if not (self.tests and not 'auto' in self.tests
                     and not getCaseID(case) in self.tests):

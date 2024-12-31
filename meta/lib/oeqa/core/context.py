@@ -10,6 +10,7 @@ import time
 import logging
 import collections
 import unittest
+import inspect
 
 from oeqa.core.loader import OETestLoader
 from oeqa.core.runner import OETestRunner
@@ -66,6 +67,7 @@ class OETestContext(object):
                 if (cid + '.').startswith(skip + '.'):
                     setattr(tclass, 'setUpHooker', skipfuncgen('Skip by the command line argument "%s"' % skip))
 
+    # mb: loadTests definition is here
     def loadTests(self, module_paths, modules=[], tests=[],
             modules_manifest="", modules_required=[], **kwargs):
         if modules_manifest:
@@ -73,6 +75,7 @@ class OETestContext(object):
 
         self.loader = self.loaderClass(self, module_paths, modules, tests,
                 modules_required, **kwargs)
+        # loadTests calls discover() from lib/oeqa/core/loader.py:class OETestLoader(unittest.TestLoader)
         self.suites = self.loader.discover()
 
     def prepareSuite(self, suites, processes):
@@ -116,7 +119,7 @@ class OETestContextExecutor(object):
         self.parser = subparsers.add_parser(self.name, help=self.help,
                 description=self.description, group='components')
 
-        self.default_output_log = '%s-results-%s.log' % (self.name, self.datetime)
+        self.default_output_log = 'data/%s-results-%s.log' % (self.name, self.datetime)
         self.parser.add_argument('--output-log', action='store',
                 default=self.default_output_log,
                 help="results output log, default: %s" % self.default_output_log)
@@ -198,7 +201,8 @@ class OETestContextExecutor(object):
                         'MACHINE': td.get("MACHINE"),
                         'DISTRO': td.get("DISTRO"),
                         'IMAGE_BASENAME': td.get("IMAGE_BASENAME"),
-                        'DATETIME': td.get("DATETIME")}
+                        'DATETIME': td.get("DATETIME"),
+                        'BBLAYERS': td.get('BBLAYERS')}
         return configuration
 
     def _get_result_id(self, configuration):
@@ -213,6 +217,18 @@ class OETestContextExecutor(object):
 
         self.tc = self._context_class(**self.tc_kwargs['init'])
         try:
+            path_to_dynamic_test_load = os.path.join(os.path.abspath(os.path.dirname(__file__)),"../../../../../meta-cxl/lib/oeqa/runtime")
+            # absolute path, unreliable
+            #path_to_dynamic_test_load = "/yocto/yocto/meta-cxl/lib/oeqa/runtime"
+            sys.path.append(path_to_dynamic_test_load)
+            logger.debug('mb: sys.path.append(%s)' % path_to_dynamic_test_load)
+
+            if path_to_dynamic_test_load:
+                from dynamic import OEDynamicTestContext
+                dtc = OEDynamicTestContext(logger)
+                dtc.find_modules()
+                dtc.generate_tests_dynamic()
+
             self.tc.loadTests(self.module_paths, **self.tc_kwargs['load'])
         except OEQATestNotFound as ex:
             logger.error(ex)
@@ -223,7 +239,6 @@ class OETestContextExecutor(object):
         else:
             self._pre_run()
             rc = self.tc.runTests(**self.tc_kwargs['run'])
-
             json_result_dir = self._get_json_result_dir(args)
             if json_result_dir:
                 configuration = self._get_configuration()
@@ -237,9 +252,12 @@ class OETestContextExecutor(object):
 
         output_link = os.path.join(os.path.dirname(args.output_log),
                 "%s-results.log" % self.name)
-        if os.path.exists(output_link):
-            os.remove(output_link)
-        os.symlink(args.output_log, output_link)
+        logger.info("mb: link %s log %s" % (output_link, args.output_log))
+        #if os.path.exists(output_link):
+        if os.path.islink(output_link):
+            logger.debug("mb: rm'ing link")
+            os.unlink(output_link)
+        os.symlink(os.path.basename(args.output_log), output_link)
 
         return rc
 

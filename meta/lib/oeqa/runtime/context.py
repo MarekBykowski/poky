@@ -41,12 +41,12 @@ class OERuntimeTestContextExecutor(OETestContextExecutor):
     help = 'runtime test component'
     description = 'executes runtime tests over targets'
 
-    default_cases = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-            'cases')
+    default_cases = [os.path.join(os.path.abspath(os.path.dirname(__file__)),
+            'cases')]
     default_data = None
     default_test_data = 'data/testdata.json'
     default_tests = ''
-    default_json_result_dir = '%s-results' % name
+    default_json_result_dir = 'data/%s-results' % name
 
     default_target_type = 'simpleremote'
     default_manifest = 'data/manifest'

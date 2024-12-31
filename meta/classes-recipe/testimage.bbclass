@@ -378,6 +378,30 @@ def testimage_main(d):
     if not test_modules:
         bb.fatal('Empty test suite, please verify TEST_SUITES variable')
 
+    if false:
+        import sys
+        sys.path.append('/yocto/yocto/meta-cxl/lib/oeqa/runtime/cases')
+        import echo
+        for t in echo.tests:
+            test_name = 'test_%s' % t[0]
+            bb.warn('mb: Add test %s' % test_name)
+            test = echo.test_generator(t[1])
+            setattr(echo.ECHOTest, test_name, test)
+    else:
+        import re
+        import sys
+        path_to_dynamic_test_load = None
+        for layer in d.getVar('BBLAYERS').split():
+            if re.search("meta-cxl", layer):
+                path_to_dynamic_test_load = os.path.join(layer, 'lib/oeqa/runtime')
+                sys.path.append(path_to_dynamic_test_load)
+
+        if path_to_dynamic_test_load:
+            from dynamic import OEDynamicTestContext
+            dtc = OEDynamicTestContext(logger)
+            dtc.find_modules()
+            dtc.generate_tests_dynamic()
+
     tc.loadTests(test_paths, modules=test_modules)
 
     suitecases = getSuiteCases(tc.suites)

@@ -378,7 +378,7 @@ def testimage_main(d):
     if not test_modules:
         bb.fatal('Empty test suite, please verify TEST_SUITES variable')
 
-    if false:
+    if False:
         import sys
         sys.path.append('/yocto/yocto/meta-cxl/lib/oeqa/runtime/cases')
         import echo

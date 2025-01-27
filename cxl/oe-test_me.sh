@@ -13,11 +13,11 @@ oeqa_run() {
 cat << 'EOF'
 echo ### Test QEMU ###
 # Run a group of tests
-oe-test runtime --target-type simpleremote --target-ip 127.0.0.1:2223 --server-ip 127.0.0.1 --packages-manifest data/manifest --test-data-file data/testdata.json /yocto/yocto/meta-cxl/lib/oeqa/runtime/cases --run-tests demo1
+oe-test runtime --target-type simpleremote --target-ip 127.0.0.1:2223 --server-ip 127.0.0.1 --packages-manifest data/config/manifest --test-data-file data/config/testdata.json /yocto/yocto/meta-cxl/lib/oeqa/runtime/cases --run-tests demo1
 # Run a single test
-oe-test runtime --target-type simpleremote --target-ip 127.0.0.1:2223 --server-ip 127.0.0.1 --packages-manifest data/manifest --test-data-file data/testdata.json /yocto/yocto/meta-cxl/lib/oeqa/runtime/cases --run-tests demo2.DEMO2Test.test_script_fail
+oe-test runtime --target-type simpleremote --target-ip 127.0.0.1:2223 --server-ip 127.0.0.1 --packages-manifest data/config/manifest --test-data-file data/config/testdata.json /yocto/yocto/meta-cxl/lib/oeqa/runtime/cases --run-tests demo2.DEMO2Test.test_script_fail
 # Run a list of tests
-oe-test runtime --target-type simpleremote --target-ip 127.0.0.1:2223 --server-ip 127.0.0.1 --packages-manifest data/manifest --test-data-file data/testdata.json /yocto/yocto/meta-cxl/lib/oeqa/runtime/cases --run-tests \
+oe-test runtime --target-type simpleremote --target-ip 127.0.0.1:2223 --server-ip 127.0.0.1 --packages-manifest data/config/manifest --test-data-file data/config/testdata.json /yocto/yocto/meta-cxl/lib/oeqa/runtime/cases --run-tests \
 demo2.DEMO2Test.test_script_fail \
 demo2.DEMO2Test.test_method_ssh
 EOF

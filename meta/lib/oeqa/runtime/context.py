@@ -44,12 +44,12 @@ class OERuntimeTestContextExecutor(OETestContextExecutor):
     default_cases = [os.path.join(os.path.abspath(os.path.dirname(__file__)),
             'cases')]
     default_data = None
-    default_test_data = 'data/testdata.json'
+    default_test_data = 'data/config/testdata.json'
     default_tests = ''
     default_json_result_dir = 'data/%s-results' % name
 
     default_target_type = 'simpleremote'
-    default_manifest = 'data/manifest'
+    default_manifest = 'data/config/manifest'
     default_server_ip = '192.168.7.1'
     default_target_ip = '192.168.7.2'
     default_extract_dir = 'packages/extracted'
@@ -208,7 +208,7 @@ class OERuntimeTestContextExecutor(OETestContextExecutor):
 
         self.tc_kwargs['init']['target'] = \
                 OERuntimeTestContextExecutor.getTarget(args.target_type,
-                        None, args.target_ip, args.server_ip, **target_kwargs)
+                        logger, args.target_ip, args.server_ip, **target_kwargs)
         self.tc_kwargs['init']['image_packages'] = \
                 OERuntimeTestContextExecutor.readPackagesManifest(
                         args.packages_manifest)

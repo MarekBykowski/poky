@@ -1,0 +1,9 @@
+{
+ "ARCH": "x86",
+ "IMAGE": "core-image-cxl-sdk",
+ "MACHINE": "cxlx86-64",
+ "DISTRO": "poky",
+ "IMAGE_BASENAME": "core-image-cxl-sdk",
+ "BBLAYERS": "/yocto/yocto/poky/meta   /yocto/yocto/poky/meta-poky   /yocto/yocto/poky/meta-yocto-bsp   /yocto/yocto/poky/../meta-cxl   /yocto/yocto/poky/../meta-openembedded/meta-oe   /yocto/yocto/poky/../meta-openembedded/meta-python",
+ "IMAGE_BASENAME":"core-image-cxl-sdk"
+}

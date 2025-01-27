@@ -156,15 +156,28 @@ class OETestContextExecutor(object):
         self.parser.set_defaults(func=self.run)
 
     def _setup_logger(self, logger, args):
-        formatter = logging.Formatter('%(asctime)s - ' + self.name + \
-                ' - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(
+                '%(asctime)s.%(msecs)03d %(levelname)s: %(message)s',
+                '%H:%M:%S')
         sh = logger.handlers[0]
+        sh.setLevel(logging.INFO)
         sh.setFormatter(formatter)
         fh = logging.FileHandler(args.output_log)
+        fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
+        # oe-test logger sets loglevel to DEBUG or ERROR based on -d (--debug) or
+        # -q (--quiet) options passed. If neither specified than -q is passed
+        # resulting with no logfile being captured out of target-under-test.
+        # Force -q and set the shell handler to INFO and file hanlder to DEBUG.
+        # Then on the stdout the INFO level is logged whereas in the logfile
+        # the DEBUG level is logged.
+        if args.debug == False:
+            logger.setLevel(logging.DEBUG)
         if getattr(args, 'verbose', False):
             logger.setLevel('DEBUG')
+
+        logger.info("Logfile storted in: %s", fh.baseFilename)
 
         return logger
 
@@ -217,11 +230,10 @@ class OETestContextExecutor(object):
 
         self.tc = self._context_class(**self.tc_kwargs['init'])
         try:
-            path_to_dynamic_test_load = os.path.join(os.path.abspath(os.path.dirname(__file__)),"../../../../../meta-cxl/lib/oeqa/runtime")
-            # absolute path, unreliable
-            #path_to_dynamic_test_load = "/yocto/yocto/meta-cxl/lib/oeqa/runtime"
+            # Add "path_to_dynamic_test_load" to sys.path
+            path_to_dynamic_test_load = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                "../../../../../meta-cxl/lib/oeqa/runtime")
             sys.path.append(path_to_dynamic_test_load)
-            logger.debug('mb: sys.path.append(%s)' % path_to_dynamic_test_load)
 
             if path_to_dynamic_test_load:
                 from dynamic import OEDynamicTestContext
@@ -252,10 +264,8 @@ class OETestContextExecutor(object):
 
         output_link = os.path.join(os.path.dirname(args.output_log),
                 "%s-results.log" % self.name)
-        logger.info("mb: link %s log %s" % (output_link, args.output_log))
-        #if os.path.exists(output_link):
         if os.path.islink(output_link):
-            logger.debug("mb: rm'ing link")
+            # Remove the soft link
             os.unlink(output_link)
         os.symlink(os.path.basename(args.output_log), output_link)
 

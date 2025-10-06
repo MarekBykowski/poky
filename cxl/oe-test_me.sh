@@ -15,6 +15,13 @@ oe-test runtime --list-tests name $metacxl_dir/lib/oeqa/runtime/cases $poky_dir/
 EOF
 }
 
+oeqa_sanity_test() {
+cat << EOF
+# First run this to check if you have connectivity to qemu b2b
+oe-test runtime --target-type simpleremote --target-ip b2b:2222 --server-ip b2b --packages-manifest data/config/manifest --test-data-file data/config/testdata.json /home/mbykowsx/yocto/meta-cxl/lib/oeqa/runtime/cases --run-tests demo2.DEMO2Test.test_method_ssh
+EOF
+}
+
 oeqa_run() {
 cat << EOF
 echo ### Test QEMU ###

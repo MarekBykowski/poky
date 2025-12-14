@@ -190,7 +190,47 @@ class OETestResult(_TestResult):
 
             if status not in logs:
                 logs[status] = []
-            logs[status].append("RESULTS - %s: %s%s" % (case.id(), status, t))
+
+            # mb:
+            # Build extra per-test info
+            extra = ""
+
+            # ---- CXL.IO for RC ----
+            if hasattr(case, "_cxl_io_rc_available") and not case._cxl_io_rc_available:
+                extra += ", CXL.IO_for_RC (trackers not available)"
+            elif (
+                hasattr(case, "_cxl_io_rc_delta")
+                and hasattr(case, "_cxl_io_rc_total")
+            ):
+                extra += (
+                    f", CXL.IO_for_RC=(delta: {case._cxl_io_rc_delta}, "
+                    f"total: {case._cxl_io_rc_total})"
+                )
+
+            # ---- CXL.IO for EP ----
+            if hasattr(case, "_cxl_io_ep_available") and not case._cxl_io_ep_available:
+                extra += ", CXL.IO_for_EP (trackers not available)"
+            elif (
+                hasattr(case, "_cxl_io_ep_delta")
+                and hasattr(case, "_cxl_io_ep_total")
+            ):
+                extra += (
+                    f", CXL.IO_for_EP=(delta: {case._cxl_io_ep_delta}, "
+                    f"total: {case._cxl_io_ep_total})"
+                )
+
+            # Always log the main result line
+            logs[status].append(
+                "RESULTS - %s: %s%s" % (case.id(), status, t)
+            )
+
+            # If we have tracker stats, log them on a separate line
+            if extra:
+                # strip leading ", " to make it look clean
+                logs[status].append(
+                    "RESULTS - %s: -> %s" % (case.id(), extra.lstrip(", "))
+                )
+
             report = {'status': status}
             if log:
                 report['log'] = log
@@ -200,6 +240,20 @@ class OETestResult(_TestResult):
 
             if duration:
                 report['duration'] = duration
+
+            if extra:
+                report["trackers"] = {
+                    "CXL.IO_for_RC": {
+                        "available": case._cxl_io_rc_available,
+                        "delta": getattr(case, "_cxl_io_rc_delta", None),
+                        "total": getattr(case, "_cxl_io_rc_total", None),
+                    },
+                    "CXL.IO_for_EP": {
+                        "available": case._cxl_io_ep_available,
+                        "delta": getattr(case, "_cxl_io_ep_delta", None),
+                        "total": getattr(case, "_cxl_io_ep_total", None),
+                    },
+                }
 
             alltags = []
             # pull tags from the case class

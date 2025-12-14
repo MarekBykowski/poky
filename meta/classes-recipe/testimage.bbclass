@@ -390,14 +390,16 @@ def testimage_main(d):
     else:
         import re
         import sys
-        path_to_dynamic_test_load = None
+        path_to_runtime_extentions = None
         for layer in d.getVar('BBLAYERS').split():
             if re.search("meta-cxl", layer):
-                path_to_dynamic_test_load = os.path.join(layer, 'lib/oeqa/runtime')
-                sys.path.append(path_to_dynamic_test_load)
+                path_to_runtime_extentions = os.path.join(layer, 'lib/oeqa/runtime')
+                sys.path.append(path_to_runtime_extentions)
 
-        if path_to_dynamic_test_load:
+        if path_to_runtime_extentions:
             from dynamic import OEDynamicTestContext
+
+            bb.note("Imported OEDynamicTestContext from dynamic (%s)" % path_to_runtime_extentions)
             dtc = OEDynamicTestContext(logger)
             dtc.find_modules()
             dtc.generate_tests_dynamic()

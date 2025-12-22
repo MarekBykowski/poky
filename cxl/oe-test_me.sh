@@ -103,6 +103,12 @@ ssh.SSHTest.test_ssh
 EOF
 }
 
+json_process() {
+cat << EOF
+python3 json2md1.py /home/mbykowsx/yocto/poky/cxl/data/runtime-results/testresults.json > results.md
+EOF
+}
+
 misc() {
 cat << EOF
 meta-cxl: $metacxl_dir/lib/oeqa/runtime/cases
@@ -113,3 +119,4 @@ EOF
 
 echo -e "oeqa_list\noeqa_run\noeqa_run_core"
 echo -e "misc"
+echo -e "json_process"

@@ -219,6 +219,18 @@ class OETestResult(_TestResult):
                     f"total: {case._cxl_io_ep_total})"
                 )
 
+            # ---- CXL.MEM ----
+            if hasattr(case, "_cxl_mem_available") and not case._cxl_mem_available:
+                extra += ", CXL.MEM (trackers not available)"
+            elif (
+                hasattr(case, "_cxl_mem_delta")
+                and hasattr(case, "_cxl_mem_total")
+            ):
+                extra += (
+                    f", CXL.IO_for_EP=(delta: {case._cxl_mem_delta}, "
+                    f"total: {case._cxl_mem_total})"
+                )
+
             # Always log the main result line
             logs[status].append(
                 "RESULTS - %s: %s%s" % (case.id(), status, t)
@@ -252,6 +264,11 @@ class OETestResult(_TestResult):
                         "available": case._cxl_io_ep_available,
                         "delta": getattr(case, "_cxl_io_ep_delta", None),
                         "total": getattr(case, "_cxl_io_ep_total", None),
+                    },
+                    "CXL.MEM": {
+                        "available": case._cxl_mem_available,
+                        "delta": getattr(case, "_cxl_mem_delta", None),
+                        "total": getattr(case, "_cxl_mem_total", None),
                     },
                 }
 

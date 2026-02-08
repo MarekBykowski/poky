@@ -1497,6 +1497,7 @@ to your build configuration.
 
     def find_qemu(self):
         qemu_bin = os.path.join(self.bindir_native, self.qemu_system)
+        logger.info("mb: QEMU binary: %s" % qemu_bin)
 
         # It is possible to have qemu-native in ASSUME_PROVIDED, and it won't
         # find QEMU in sysroot, it needs to use host's qemu.
@@ -1531,9 +1532,9 @@ to your build configuration.
         self.qemu_opt += ' ' + self.qemu_opt_script
 
         if self.ovmf_secboot_pkkek1:
-			# Provide the Platform Key and first Key Exchange Key certificate as an
-			# OEM string in the SMBIOS Type 11 table. Prepend the certificate string
-			# with "application prefix" of the EnrollDefaultKeys.efi application
+                        # Provide the Platform Key and first Key Exchange Key certificate as an
+                        # OEM string in the SMBIOS Type 11 table. Prepend the certificate string
+                        # with "application prefix" of the EnrollDefaultKeys.efi application
             self.qemu_opt += ' -smbios type=11,value=4e32566d-8e9e-4f52-81d3-5bb9715f9727:' \
                              + self.ovmf_secboot_pkkek1
 
@@ -1569,7 +1570,57 @@ to your build configuration.
 
         cmd = "%s %s" % (self.qemu_opt, kernel_opts)
         cmds = shlex.split(cmd)
-        logger.info('Running %s\n' % cmd)
+
+        cmds = [
+            "/home/mbykowsx/yocto/poky/cxl/tmp/work/x86_64-linux/qemu-helper-native/1.0/recipe-sysroot-native/usr/bin/qemu-system-x86_64",
+
+            # CPU / machine
+            "-enable-kvm",
+            "-cpu", "Broadwell",
+            "-machine", "q35,cxl=on",
+            "-smp", "8,sockets=2,cores=2,threads=2",
+            "-m", "512M,slots=4,maxmem=8G",
+
+            # Networking
+            "-device", "virtio-net-pci,netdev=net0,mac=52:54:00:12:35:02",
+            "-netdev", "user,id=net0,hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:2323-:23",
+
+            # RNG
+            "-object", "rng-random,filename=/dev/urandom,id=rng0",
+            "-device", "virtio-rng-pci,rng=rng0",
+
+            # Root filesystem
+            "-drive",
+            "file=/home/mbykowsx/yocto/poky/cxl/tmp/deploy/images/cxlx86-64/core-image-cxl-sdk-cxlx86-64.rootfs.ext4,if=virtio,format=raw",
+
+            # CXL host bridge and device
+            #"-device", "pxb-cxl,id=cxl.0,bus=pcie.0",
+            #"-device", "cxl-rp,id=rp0,bus=cxl.0,port=0",
+            "-device", "cxl-rp,id=rp0,bus=pcie.0,port=0",
+
+            "-object",
+            "memory-backend-file,id=cxl-mem0,share=on,mem-path=/tmp/cxl-mem0.raw,size=256M",
+            "-object",
+            "memory-backend-file,id=cxl-lsa0,share=on,mem-path=/tmp/cxl-lsa0.raw,size=256M",
+            "-device",
+            "cxl-type3,id=cxl-pmem0,bus=rp0,memdev=cxl-mem0,lsa=cxl-lsa0",
+
+            # CXL firmware memory window
+            #"-M", "cxl-fmw.0.targets.0=cxl.0",
+            #"-M", "cxl-fmw.0.size=4G",
+
+            # Console / kernel
+            "-serial", "mon:stdio",
+            "-serial", "null",
+            "-nographic",
+            "-kernel", "/home/mbykowsx/yocto/poky/cxl/tmp/deploy/images/cxlx86-64/bzImage",
+            "-append",
+            "root=/dev/vda rw mem=512M ip=dhcp console=ttyS0 console=ttyS1 nokaslr bootconfig swiotlb=0",
+        ]
+
+        logger.info('Running %s\n' % cmds)
+        print(f'mb: qemu: {cmds}')
+        #sys.exit(1)
         with open('/proc/uptime', 'r') as f:
             uptime_seconds = f.readline().split()[0]
         logger.info('Host uptime: %s\n' % uptime_seconds)

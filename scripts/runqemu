@@ -1576,7 +1576,7 @@ to your build configuration.
 
             # CPU / machine
             "-enable-kvm",
-            "-cpu", "Broadwell",
+            "-cpu", "host",
             "-machine", "q35,cxl=on",
             "-smp", "8,sockets=2,cores=2,threads=2",
             "-m", "512M,slots=4,maxmem=8G",
@@ -1615,7 +1615,7 @@ to your build configuration.
             "-nographic",
             "-kernel", "/home/mbykowsx/yocto/poky/cxl/tmp/deploy/images/cxlx86-64/bzImage",
             "-append",
-            "root=/dev/vda rw mem=512M ip=dhcp console=ttyS0 console=ttyS1 nokaslr bootconfig swiotlb=0",
+            "root=/dev/vda rw mem=512M ip=dhcp loglevel=8 ignore_loglevel console=ttyS0 console=ttyS1 nokaslr bootconfig swiotlb=0",
         ]
 
         logger.info('Running %s\n' % cmds)

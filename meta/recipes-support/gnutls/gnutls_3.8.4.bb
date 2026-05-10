@@ -30,6 +30,7 @@ SRC_URI[sha256sum] = "2bea4e154794f3f00180fa2a5c51fe8b005ac7a31cd58bd44cdfa7f36e
 inherit autotools texinfo pkgconfig gettext lib_package gtk-doc ptest
 
 PACKAGECONFIG ??= "libidn libtasn1 ${@bb.utils.filter('DISTRO_FEATURES', 'seccomp', d)}"
+PACKAGECONFIG:append:class-native = " p11-kit"
 
 # You must also have CONFIG_SECCOMP enabled in the kernel for
 # seccomp to work.
